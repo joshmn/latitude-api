@@ -3,12 +3,12 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-version="${1:-}"
+version="${1:-minor}"
 version_file="lib/latitude/api/version.rb"
 
-if [ -z "$version" ]; then
-  echo "usage: bin/release patch|minor|major|VERSION (e.g. bin/release patch, bin/release 0.2.0)"
-  exit 1
+if [ "$version" = "-h" ] || [ "$version" = "--help" ]; then
+  echo "usage: bin/release [patch|minor|major|VERSION] (defaults to minor)"
+  exit 0
 fi
 
 current="$(ruby -e "require './$version_file'; print Latitude::API::VERSION")"
