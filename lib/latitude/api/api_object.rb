@@ -3,6 +3,9 @@
 module Latitude
   module API
     class APIObject
+      extend Attributes::ClassMethods
+      include Attributes::InstanceMethods
+
       RESERVED = %i[attributes id type meta values].freeze
 
       attr_reader :raw
@@ -21,7 +24,7 @@ module Latitude
       def initialize(hash = {})
         @raw = hash || {}
         @values = {}
-        @raw.each { |k, v| @values[k.to_s] = self.class.wrap(v) }
+        @raw.each { |k, v| @values[k.to_s] = wrap_attribute(k, v) }
       end
 
       def [](key)

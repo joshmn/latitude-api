@@ -3,6 +3,9 @@
 module Latitude
   module API
     class APIResource
+      extend Attributes::ClassMethods
+      include Attributes::InstanceMethods
+
       class << self
         def resource_type(value = nil)
           @resource_type = value if value
@@ -111,7 +114,7 @@ module Latitude
         @values      = {}
         @unsaved     = []
         Array(data["attributes"]).each do |k, v|
-          @values[k.to_s] = APIObject.wrap(v)
+          @values[k.to_s] = wrap_attribute(k, v)
         end
       end
 
@@ -154,9 +157,13 @@ module Latitude
 
       def []=(key, value)
         key_s = key.to_s
-        @values[key_s] = APIObject.wrap(value)
+        @values[key_s] = wrap_attribute(key_s, value)
         @unsaved << key_s unless @unsaved.include?(key_s)
         value
+      end
+
+      def write_attribute(name, value)
+        self[name] = value
       end
 
       def unsaved_attributes
@@ -196,7 +203,7 @@ module Latitude
 
       def respond_to_missing?(name, include_private = false)
         return true if @values.key?(name.to_s)
-        return true if name.to_s.end_with?("=") && !self.class::READ_ONLY_ATTRIBUTES.include?(name.to_s.chomp("="))
+        return true if name.to_s.end_with?("=") && !read_only_attribute?(name.to_s.chomp("="))
 
         super
       end
@@ -205,7 +212,7 @@ module Latitude
         name_s = name.to_s
         if name_s.end_with?("=") && args.size == 1
           attr_name = name_s.chomp("=")
-          if self.class::READ_ONLY_ATTRIBUTES.include?(attr_name)
+          if read_only_attribute?(attr_name)
             raise NoMethodError, "cannot assign to read-only attribute #{attr_name}"
           end
 
@@ -221,6 +228,13 @@ module Latitude
 
       private
 
+      def read_only_attribute?(name)
+        return true if READ_ONLY_ATTRIBUTES.include?(name)
+
+        spec = attribute_spec(name)
+        spec ? spec.read_only : false
+      end
+
       def update_from(parsed)
         data = parsed.is_a?(Hash) ? parsed["data"] : nil
         return unless data.is_a?(Hash)
@@ -230,7 +244,7 @@ module Latitude
         @type = data["type"] if data["type"]
         @meta = data["meta"] if data["meta"]
         @values = {}
-        Array(data["attributes"]).each { |k, v| @values[k.to_s] = APIObject.wrap(v) }
+        Array(data["attributes"]).each { |k, v| @values[k.to_s] = wrap_attribute(k, v) }
         self
       end
 
