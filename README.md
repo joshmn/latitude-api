@@ -72,6 +72,10 @@ client.servers.list
 client.projects.retrieve("proj_abc")
 ```
 
+## Extensive, fat docs 
+
+[Fully commented with YARD; RubyDoc.info](https://rubydoc.info/github/joshmn/latitude-api).
+
 ## Resources
 
 All resources are under `Latitude::`:
